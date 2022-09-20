@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      canvas {
+        border: 1px solid #d3d3d3;
+        background-color: #f1f1f1;
+      }
+    </style>
+  </head>
+  <body onload="startGame()">
+    <script>
+      var myGamePiece;
+      var myObstacle;
+      var myPlatform;
+      var myBackground;
+
+      function startGame() {
+        myGamePiece = new component(30, 30, "ninja-1.png", 10, 165, "image");
+        myPlatform = new component(
+          480,
+          70,
+          "Platform2.png",
+          0,
+          270,
+          "platform"
+        );
+        myBackground = new component(656, 270, "Bg-3.png", 0, 0, "background");
+        myObstacle = new component(10, 20, "white", 240, 240);
+        myGameArea.start();
+      }
+
+      var myGameArea = {
+        canvas: document.createElement("canvas"),
+        start: function () {
+          this.canvas.width = 480;
+          this.canvas.height = 270;
+          this.context = this.canvas.getContext("2d");
+
+          document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+          this.frameNo = 0;
+          this.interval = setInterval(updateGameArea, 20);
+        },
+        clear: function () {
+          this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        },
+        stop: function () {
+          clearInterval(this.interval);
+        },
+      };
+
+      function component(width, height, color, x, y, type) {
+        this.type = type;
+        if (type == "image" || type == "platform" || type == "background") {
+          this.image = new Image();
+          this.image.src = color;
+        }
+        this.width = width;
+        this.height = height;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.gravity = 5;
+        this.gravitySpeed = 0;
+        this.x = x;
+        this.y = y;
+        this.update = function () {
+          ctx = myGameArea.context;
+          if (type == "image" || type == "platform" || type == "background") {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            if (type == "platform" || type == "background") {
+              ctx.drawImage(
+                this.image,
+                this.x + this.width,
+                this.y,
+                this.width,
+                this.height
+              );
+            }
+          } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+          }
+        };
+        this.newPos = function () {
+          this.gravitySpeed += this.gravity;
+          this.x += this.speedX;
+          this.y += this.speedY + this.gravitySpeed;
+          if (this.type == "platform" || type == "background") {
+            if (this.x == -this.width) {
+              this.x = 0;
+            }
+          }
+          this.hitPlatform();
+          this.hitBottom();
+        };
+        this.hitBottom = function () {
+          var rockbottom = myGameArea.canvas.height - this.height;
+          if (this.y > rockbottom) {
+            this.y = rockbottom;
+          }
+        };
+        this.hitPlatform = function () {
+          var rockplatform = myGameArea.canvas.height - 100;
+          if (myGamePiece.y > rockplatform) {
+            myGamePiece.y = rockplatform;
+          }
+        };
+      }
+
+      let scrollOffset = 0;
+
+      function updateGameArea() {
+        myGameArea.clear();
+        myBackground.update();
+        myBackground.speedX = -1;
+        myBackground.newPos();
+        myPlatform.update();
+        myPlatform.newPos();
+        myGamePiece.newPos();
+        myGamePiece.update();
+        myPlatform.speedX = -1;
+        myObstacle.update();
+      }
+
+      function move(dir) {
+        // myGamePiece.image.src = "Ninja-1.png";
+        if (dir == "up") {
+          myGamePiece.speedY -= 10;
+        }
+        if (scrollOffset > 200) {
+          alert("You win");
+        }
+      }
+
+      function clearmove() {
+        // myGamePiece.image.src = "Ninja-1.png";
+        myGamePiece.speedX = 0;
+        myGamePiece.speedY = 0;
+      }
+
+      function accelerate(n){
+        myGamePiece.gravity = n
+      }
+    </script>
+    <div style="text-align: center; width: 480px">
+      <button
+        onmousedown="move('up')"
+        onmouseup="clearmove()"
+        ontouchstart="move('up')"
+      >
+        UP
+      </button>
+      <button onmousedown="accelerate(-0.2)" onmouseup="accelerate(0.1)"> ACCELERATE </button>
+    </div>
+  </body>
+</html>
